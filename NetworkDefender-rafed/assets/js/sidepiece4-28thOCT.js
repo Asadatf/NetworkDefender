@@ -103,6 +103,7 @@ function create() {
     // Input for QTE and movement
     this.keys = this.input.keyboard.addKeys({
         space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+        x: Phaser.Input.Keyboard.KeyCodes.X,
         e: Phaser.Input.Keyboard.KeyCodes.E,
         w: Phaser.Input.Keyboard.KeyCodes.W,
         a: Phaser.Input.Keyboard.KeyCodes.A,
@@ -230,9 +231,13 @@ function update() {
             });
         }
     }
+
+    // Send packet when "X" key is pressed
+    if (Phaser.Input.Keyboard.JustDown(this.keys.x)) {
+        launchPacket.call(this); // Call the launchPacket function to send the packet
+    }
 }
 
-// Function to launch packet
 // Function to launch packet
 function launchPacket() {
     // Define the start and end positions for the packet
@@ -249,24 +254,37 @@ function launchPacket() {
         targets: packet,
         x: endX,
         y: endY,
-        duration: 1500, // Duration of the animation in milliseconds
+        duration: 1000, // Duration of the animation in milliseconds
         onComplete: function() {
+            // Check for interception
+            if (Phaser.Math.Distance.Between(packet.x, packet.y, this.attacker.x, this.attacker.y) < 1010) {
+                // Packet is intercepted by the attacker
+                this.score -= 5; // Example penalty for interception
+                this.scoreText.setText("Score: " + this.score); // Update score display
+                this.qteActionText.setText("Packet Intercepted!").setFill("#ff0000");
+                this.time.delayedCall(3000, () => {
+                    this.qteActionText.setText("");
+                });
+
+            } else {
+                // Successful packet transfer
+                this.score = this.score+10; // Example score increment for successful transfer
+                this.scoreText.setText("Score: " + this.score); // Update score display
+            }
             // Hide the packet once it reaches the target
             packet.destroy();
         },
         onUpdate: function() {
             // Optional: add any update logic here if needed
-        }
+        },
+        callbackScope: this // Set the callback scope to the current scene context
     });
-
-    // Optional: You can also update the score or add other logic here if necessary
-    this.score += 10; // Example score increment
-    this.scoreText.setText("Score: " + this.score); // Update score display
 }
+
 
 
 // Function to complete the encryption minigame
 function completeEncryptionMinigame() {
-    // Logic to complete the encryption minigame
+    
 }
 
