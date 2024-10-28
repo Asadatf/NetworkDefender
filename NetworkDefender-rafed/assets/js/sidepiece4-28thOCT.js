@@ -68,40 +68,47 @@ function create() {
     this.background.displayWidth = this.scale.width;
     this.background.displayHeight = this.scale.height;
 
-    // Add receiver
-    this.receiver = this.physics.add.image(924, 250, "receiver");
-    this.receiver.flipX = true;
-    this.receiver.setCollideWorldBounds(true);
-    this.receiver.setScale(0.15);
-
-    // Add defender
-    this.defender = this.physics.add.image(100, 250, "defender");
-    this.defender.setCollideWorldBounds(true);
-    this.defender.setScale(0.15);
-
-    // Add attacker
-    this.attacker = this.physics.add.image(window.innerWidth / 2, 100, "attacker").setScale(0.05);
-    this.attacker.setCollideWorldBounds(true);
-
     // Create static obstacles group
     this.obstacles = this.physics.add.staticGroup();
 
     // Scale obstacles based on screen size
     var obstacleScale = Math.min(this.scale.width / 10000, this.scale.height / 10000);
-    this.obstacles.create(window.innerWidth / 2, 200, "router").setScale(obstacleScale).refreshBody();
-    this.obstacles.create(window.innerWidth / 4, 300, "switch").setScale(obstacleScale).refreshBody();
-    this.obstacles.create(window.innerWidth * 3 / 4, 300, "switch").setScale(obstacleScale).refreshBody();
+    const leftSwitch = this.obstacles.create(window.innerWidth / 4, 300, "switch").setScale(obstacleScale).refreshBody();
+    const rightSwitch = this.obstacles.create(window.innerWidth * 3 / 4, 300, "switch").setScale(obstacleScale).refreshBody();
 
-    // Enable collision between defender and obstacles
+    
+    this.defender = this.physics.add.image(leftSwitch.x-100, leftSwitch.y , "defender");        
+    this.defender.setCollideWorldBounds(true);
+    this.defender.setScale(0.15);
+
+    
+    this.attacker = this.physics.add.image(window.innerWidth / 2, 100, "attacker").setScale(0.05); 
+    this.attacker.setCollideWorldBounds(true);
+
+    
+    this.receiver = this.physics.add.image(rightSwitch.x + 50, rightSwitch.y, "receiver"); 
+    this.receiver.flipX = true;
+    this.receiver.setCollideWorldBounds(true);
+    this.receiver.setScale(0.15);
+
+    
+    const router = this.obstacles.create(window.innerWidth / 2, 200, "router").setScale(obstacleScale).refreshBody();
+
+    
     this.physics.add.collider(this.defender, this.obstacles);
 
-    // Add packet
-    this.packet = this.physics.add.image(this.defender.x + 10, this.defender.y, "packet").setScale(0.05);
+    
+    // this.packet = this.physics.add.image(this.defender.x + 10, this.defender.y, "packet").setScale(0.05);
 
-    // Input for QTE
+    // Input for QTE and movement
     this.keys = this.input.keyboard.addKeys({
         space: Phaser.Input.Keyboard.KeyCodes.SPACE,
         e: Phaser.Input.Keyboard.KeyCodes.E,
+        w: Phaser.Input.Keyboard.KeyCodes.W,
+        a: Phaser.Input.Keyboard.KeyCodes.A,
+        s: Phaser.Input.Keyboard.KeyCodes.S,
+        d: Phaser.Input.Keyboard.KeyCodes.D,
+        esc: Phaser.Input.Keyboard.KeyCodes.ESC,
     });
 
     // Text to display events and scores
@@ -118,9 +125,6 @@ function create() {
         loop: false,
     });
 
-    // Adding keyboard inputs
-    this.cursors = this.input.keyboard.createCursorKeys();
-
     // Popup Menu
     this.menuActive = false;
     this.menuBackground = this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 400, 300, 0x000000, 0.7).setVisible(false);
@@ -131,21 +135,23 @@ function create() {
     }).setOrigin(0.5).setVisible(false);
 }
 
+
+
 function update() {
     this.defender.body.setVelocity(0);
 
-    // Keyboard Movement
-    if (this.cursors.left.isDown) {
+    // Keyboard Movement using WASD
+    if (this.keys.a.isDown) {
         this.defender.body.setVelocityX(-250);
-        this.defender.flipX = true;
-    } else if (this.cursors.right.isDown) {
+        this.defender.flipX = true; // Flip the sprite to face left
+    } else if (this.keys.d.isDown) {
         this.defender.body.setVelocityX(250);
-        this.defender.flipX = false;
+        this.defender.flipX = false; // Flip the sprite to face right
     }
 
-    if (this.cursors.up.isDown) {
+    if (this.keys.w.isDown) {
         this.defender.body.setVelocityY(-250);
-    } else if (this.cursors.down.isDown) {
+    } else if (this.keys.s.isDown) {
         this.defender.body.setVelocityY(250);
     }
 
@@ -190,12 +196,8 @@ function update() {
     }
 
     // Close the menu when ESC is pressed
-    if (Phaser.Input.Keyboard.JustDown(this.keys.space) && this.menuActive) {
-        this.showPuzzle(this.currentObstacleType);
-    }
-
-    // Close the menu when ESC is pressed
-    if (Phaser.Input.Keyboard.JustDown(this.keys.space) && this.menuActive) {
+    if (Phaser.Input.Keyboard.JustDown(this.keys.esc) && this.menuActive) {
+        console.log("Closing menu");  // Debug statement
         this.menuActive = false;
         this.menuBackground.setVisible(false);
         this.menuText.setVisible(false);
@@ -230,49 +232,41 @@ function update() {
     }
 }
 
+// Function to launch packet
+// Function to launch packet
 function launchPacket() {
-    this.physics.moveTo(this.packet, this.receiver.x, this.receiver.y, this.packetSpeed);
-    this.time.delayedCall(2000, triggerMITMAttack, [], this);
-}
+    // Define the start and end positions for the packet
+    const startX = this.obstacles.getChildren()[0].x; // Left switch position
+    const startY = this.obstacles.getChildren()[0].y; // Left switch position
+    const endX = this.obstacles.getChildren()[1].x; // Right switch position
+    const endY = this.obstacles.getChildren()[1].y; // Right switch position
 
-function triggerMITMAttack() {
-    if (this.qteActive) return;
-    this.qteActive = true;
-    this.qteTimer = this.qteDuration;
-    this.qteSuccess = false;
-    this.physics.moveTo(this.attacker, this.packet.x, this.packet.y, 50);
-    this.encryptionMinigameActive = true;
-}
-
-function completeEncryptionMinigame() {
-    if (!this.encryptionMinigameActive) return;
-    this.encryptionMinigameActive = false;
-
-    let packetData = "ATTACK";
-    let encryptedData = caesarCipher(packetData, 3);
-    this.score += 1;
-    updateScore.call(this);
-    this.qteActionText.setText("Press Spacebar to Finish!");
-    this.attacker.setVelocity(0, 0);
-}
-
-function updateScore() {
-    this.scoreText.setText("Score: " + this.score);
-}
-
-function caesarCipher(str, shift) {
-    let result = "";
-    for (let i = 0; i < str.length; i++) {
-        let char = str[i];
-        if (char >= "A" && char <= "Z") {
-            let newCharCode = ((char.charCodeAt(0) - 65 + shift) % 26) + 65;
-            result += String.fromCharCode(newCharCode);
-        } else if (char >= "a" && char <= "z") {
-            let newCharCode = ((char.charCodeAt(0) - 97 + shift) % 26) + 97;
-            result += String.fromCharCode(newCharCode);
-        } else {
-            result += char;
+    // Create a new packet sprite
+    const packet = this.physics.add.image(startX, startY, "packet").setScale(0.05);
+    
+    // Use a tween to animate the packet's movement
+    this.tweens.add({
+        targets: packet,
+        x: endX,
+        y: endY,
+        duration: 1500, // Duration of the animation in milliseconds
+        onComplete: function() {
+            // Hide the packet once it reaches the target
+            packet.destroy();
+        },
+        onUpdate: function() {
+            // Optional: add any update logic here if needed
         }
-    }
-    return result;
+    });
+
+    // Optional: You can also update the score or add other logic here if necessary
+    this.score += 10; // Example score increment
+    this.scoreText.setText("Score: " + this.score); // Update score display
 }
+
+
+// Function to complete the encryption minigame
+function completeEncryptionMinigame() {
+    // Logic to complete the encryption minigame
+}
+
