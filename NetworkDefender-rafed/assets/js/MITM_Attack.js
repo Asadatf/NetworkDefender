@@ -20,19 +20,15 @@ var config = {
 var game = new Phaser.Game(config);
 
 function init() {
-  // Initialising packet speed
   this.packetSpeed = 20;
-
-  // encryption mini game state variables
   this.encryptionMinigameActive = false;
   this.score = 0;
   this.upgrades = 0;
-
-  // QTE state variables
   this.qteActive = false;
   this.qteTimer = 0;
-  this.qteDuration = 10000; // QTE duration in milliseconds
+  this.qteDuration = 10000;
   this.qteSuccess = false;
+  this.popupVisible = false;
 
   // Text setup for QTE Action
   this.qteActionText = this.add
@@ -44,7 +40,15 @@ function init() {
     })
     .setOrigin(0.5, 0)
     .setDepth(1);
+
+  // Text setup for interaction prompt
+  this.interactText = this.add
+    .text(512, 450, "", { fontSize: "24px", fill: "#ffffff" })
+    .setOrigin(0.5, 0)
+    .setDepth(1)
+    .setVisible(false);
 }
+
 
 function preload() {
   this.load.image("background", "assets/images/background.jpeg");
