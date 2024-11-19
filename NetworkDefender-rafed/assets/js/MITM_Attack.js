@@ -20,7 +20,7 @@ var config = {
 var game = new Phaser.Game(config);
 
 function init() {
-  this.packetSpeed = 20;
+  this.packetSpeed = 100;
   this.encryptionMinigameActive = false;
   this.score = 0;
   this.upgrades = 0;
@@ -48,7 +48,6 @@ function init() {
     .setDepth(1)
     .setVisible(false);
 }
-
 
 function preload() {
   this.load.image("background", "assets/images/background.jpeg");
