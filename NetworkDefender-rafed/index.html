@@ -8,11 +8,26 @@
       canvas {
         width: 100%;
       }
+      #inputBox {
+        position: absolute;
+        display: none;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 16px;
+        padding: 5px;
+      }
     </style>
   </head>
   <body>
-    <div id="NetworkDefender"></div>
+    <div id="NetworkDefender">
+      <input
+        type="text"
+        id="inputBox"
+        placeholder="Enter IP configuration here"
+      />
+    </div>
     <script src="./assets/js/phaser.min.js" charset="utf-8"></script>
-    <script src="./assets/js/sidepiece4-28thOCT.js" charset="utf-8"></script>
+    <script src="./assets/js/IpConfig.js" charset="utf-8"></script>
   </body>
 </html>
