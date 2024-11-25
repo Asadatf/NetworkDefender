@@ -4,6 +4,14 @@ class TitleScene extends Phaser.Scene {
   }
 
   create() {
+    // Audio
+    this.titleTrack = this.sound.add("titleTrack", {
+      loop: true,
+      volume: 0.5,
+    });
+
+    this.titleTrack.play();
+
     this.clickSound = this.sound.add("clickSound", {
       loop: false,
       volume: 0.8,
@@ -40,6 +48,7 @@ class TitleScene extends Phaser.Scene {
       "Start",
       () => {
         this.clickSound.play(); // Play the sound
+        this.titleTrack.stop();
         this.startScene("Game"); // Start the game scene
       }
     );

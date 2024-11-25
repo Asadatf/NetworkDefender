@@ -43,7 +43,7 @@ class GameScene extends Phaser.Scene {
     this.obstacles.add(this.leftSwitch);
 
     this.rightSwitch = new NetworkDevice(this, rX, rY, "switch");
-    this.obstacles.add(this.leftSwitch);
+    this.obstacles.add(this.rightSwitch);
 
     this.physics.add.collider(this.defender, this.obstacles);
 
@@ -74,6 +74,7 @@ class GameScene extends Phaser.Scene {
   update() {
     this.defender.update(this.keys, this.MessageHandler.menuActive);
 
+    this.nearObstacle = false;
     this.obstacles.children.iterate((obstacle) => {
       if (
         Phaser.Math.Distance.Between(

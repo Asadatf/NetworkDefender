@@ -29,6 +29,7 @@ class BootScene extends Phaser.Scene {
 
   loadAudio() {
     this.load.audio("clickSound", ["assets/audio/clickSound.mp3"]);
+    this.load.audio("titleTrack", ["assets/audio/titleTrack.mp3"]);
   }
 
   create() {

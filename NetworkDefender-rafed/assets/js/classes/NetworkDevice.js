@@ -7,13 +7,9 @@ class NetworkDevice extends Phaser.Physics.Arcade.Image {
       this.scale.height / 10000
     );
 
-    //enable physics
-    this.scene.physics.world.enable(this);
-
     // scale the device
     this.setScale(0.1);
-    // collide with world bounds, prevent from leaving world
-    this.setCollideWorldBounds(true);
+
     // add device to existing scene
     this.scene.add.existing(this);
   }
