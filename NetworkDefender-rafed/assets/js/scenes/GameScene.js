@@ -55,6 +55,14 @@ class GameScene extends Phaser.Scene {
       "packet"
     );
 
+    // Creating briefcase for encryption
+    this.briefcase_red = this.add.image(
+      this.scale.width / 2,
+      this.scale.height / 2,
+      "briefcase"
+    );
+    this.briefcase_red.setScale(2).setVisible(false);
+
     // Message handler
     this.MessageHandler = new MessageHandler(this, this.packet, dX, dY, rX, rY);
 

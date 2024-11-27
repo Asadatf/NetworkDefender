@@ -89,26 +89,43 @@ class MessageHandler {
 
   displaySpeechBubble(x, y, message) {
     // Create a speech bubble at the given coordinates
-    // const speechBubble = this.add.image(x, y, "speechBubble");
-    // speechBubble.setOrigin(0.5);
-    // speechBubble.setScale(0.5);
+    const speechBubble = this.scene.add.image(x, y - 50, "Popup");
+    speechBubble.setOrigin(0.5);
+    speechBubble.setScale(1).setDepth(1);
+
+    const bubbleWidth = speechBubble.width * speechBubble.scaleX - 20;
 
     // Add the user's message inside the bubble
     const bubbleText = this.scene.add
       .text(x, y, message, {
         fontSize: "18px",
         fill: "#000000",
-        wordWrap: { width: 250, useAdvancedWrap: true },
+        wordWrap: { width: bubbleWidth, useAdvancedWrap: true },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(2)
+      .setAlpha(0);
 
+    // Putting text inside button
+    Phaser.Display.Align.In.Center(bubbleText, speechBubble);
     // Optionally, you can add an animation or movement to make the speech bubble appear more dynamic.
     // For example, make the speech bubble pop up or appear with a slight delay.
 
+    // Set initial alpha to 0 for the bubble
+    speechBubble.setAlpha(0);
+
+    // Add fade-in animation
+    this.scene.tweens.add({
+      targets: [speechBubble, bubbleText], // Both the bubble and the text
+      alpha: 1, // Target alpha
+      duration: 500, // Animation duration in milliseconds
+      ease: "Power2", // Optional easing for smoothness
+    });
+
     // Set a timer to automatically remove the speech bubble after some time or when the user clicks to continue.
     this.scene.time.delayedCall(3000, () => {
-      // speechBubble.destroy();
       bubbleText.destroy();
+      speechBubble.destroy();
     });
   }
 

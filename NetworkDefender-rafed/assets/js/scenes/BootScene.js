@@ -7,6 +7,9 @@ class BootScene extends Phaser.Scene {
     // load images
     this.loadImages();
 
+    // load spritesheet
+    this.loadspritesheet();
+
     // load Audio
     this.loadAudio();
   }
@@ -21,10 +24,18 @@ class BootScene extends Phaser.Scene {
     this.load.image("switch", "assets/images/switch.png");
     this.load.image("packet", "assets/images/packet.png");
     this.load.image("messageBox", "assets/images/message_box.png");
+    this.load.image("Popup", "assets/images/Popup.png");
 
     // UI Buttons
     this.load.image("button1", "assets/images/ui/blue_button01.png");
     this.load.image("button2", "assets/images/ui/blue_button02.png");
+  }
+
+  loadspritesheet() {
+    this.load.spritesheet("briefcase", "assets/images/briefcase.png", {
+      frameWidth: 192,
+      frameHeight: 192,
+    });
   }
 
   loadAudio() {
