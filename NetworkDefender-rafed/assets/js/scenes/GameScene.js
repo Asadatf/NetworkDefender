@@ -61,10 +61,18 @@ class GameScene extends Phaser.Scene {
       this.scale.height / 2,
       "briefcase"
     );
-    this.briefcase_red.setScale(2).setVisible(false);
+    this.briefcase_red.setScale(2).setDepth(1).setVisible(false);
 
     // Message handler
-    this.MessageHandler = new MessageHandler(this, this.packet, dX, dY, rX, rY);
+    this.MessageHandler = new MessageHandler(
+      this,
+      this.packet,
+      this.briefcase_red,
+      dX,
+      dY,
+      rX,
+      rY
+    );
 
     // Creating Controll Keys
     this.keys = this.input.keyboard.addKeys({

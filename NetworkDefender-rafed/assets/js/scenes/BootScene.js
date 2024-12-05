@@ -25,6 +25,11 @@ class BootScene extends Phaser.Scene {
     this.load.image("packet", "assets/images/packet.png");
     this.load.image("messageBox", "assets/images/message_box.png");
     this.load.image("Popup", "assets/images/Popup.png");
+    this.load.plugin(
+      "rexinputtextplugin",
+      "assets/plugins/inputPlugin.js",
+      true
+    );
 
     // UI Buttons
     this.load.image("button1", "assets/images/ui/blue_button01.png");

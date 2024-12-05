@@ -1,27 +1,24 @@
 class MessageHandler {
-  constructor(scene) {
+  constructor(scene, packet, red_briefcase, dX, dY, rX, rY) {
+    this.dX = dX;
+    this.dY = dY;
+    this.rX = rX;
+    this.rY = rY;
+    this.red_briefcase = red_briefcase;
     this.scene = scene;
+    this.lastMessage = "";
     this.menuActive = false;
-    this.lastMessage = null;
-    this.userMessage = "";
+    this.packetTween = null;
+    this.packet = packet;
     this.currentEncryptIndex = 0;
-    this.menuBackground = null;
-    this.menuText = null;
-    this.messageInput = null;
-    this.avatar = null;
-    this.receiverAvatar = null; // Define receiver avatar object
-    this.aiFeedbackText = null; // To display AI feedback
-    this.isEncrypted = false; // To track if the message has been encrypted
-  }
-
-  initialize() {
-    this.avatar = this.scene.add.sprite(200, 300, 'avatarImageKey');
-    this.receiverAvatar = this.scene.add.sprite(600, 300, 'receiverAvatarImageKey'); // Example position for receiver avatar
-
-    // Listen for 'E' key press to open the popup menu
-    this.scene.input.keyboard.on("keydown-E", () => {
-      this.openMessagePopup();
-    });
+    this.aiFeedbackText = null;
+    this.isEncrypted = false;
+    this.isEncrypting = false;
+    this.keydownListener = null;
+    this.wallet = 10;
+    this.selectedWords = [];
+    this.wordTextObjects = [];
+    this.tokenizedMessage = [];
   }
 
   openMessagePopup() {
@@ -39,7 +36,7 @@ class MessageHandler {
       );
 
       let promptText = this.lastMessage
-        ? "Press arrows to encrypt the message:"
+        ? "Use arrow keys to select words to encrypt:"
         : "Write your message:";
       this.menuText = this.scene.add
         .text(
@@ -67,48 +64,84 @@ class MessageHandler {
         this.userMessage = this.lastMessage; // For encryption
       }
 
-      this.scene.input.keyboard.on("keydown", (event) => {
+      // Remove previous keydown listener if exists
+      if (this.keydownListener) {
+        this.scene.input.keyboard.off("keydown", this.keydownListener);
+      }
+
+      this.keydownListener = (event) => {
         if (this.menuActive) {
           if (!this.lastMessage) {
-            // Message typing
+            // Message typing logic
             if (event.key === "Backspace") {
               this.userMessage = this.userMessage.slice(0, -1);
-            } else if (event.key.length === 1 && event.key.match(/[a-zA-Z0-9 ]/)) {
+            } else if (
+              event.key.length === 1 &&
+              /[a-zA-Z0-9 ]/.test(event.key)
+            ) {
               this.userMessage += event.key;
             } else if (event.key === "Enter") {
               this.lastMessage = this.userMessage;
               this.menuActive = false;
-              this.displaySpeechBubble(this.userMessage);  // Show speech bubble after message is entered
+
+              this.displaySpeechBubble(this.dX, this.dY - 50, this.userMessage);
+
+              // Tokenize and store the message
+              this.tokenizedMessage = this.userMessage.split(/\s+/);
+              console.log(this.tokenizedMessage);
+
               this.closePopup();
             }
             this.messageInput.setText(this.userMessage + "_");
           } else {
-            // Encrypting step
+            // Display tokenized message when re-opening menu
+            this.displayTokenizedMessage(this.tokenizedMessage); // Pass tokenized message as parameter
+            // Handle encryption logic
             this.handleManualEncryption(event);
           }
         }
-      });
+      };
+
+      // Attach the new listener
+      this.scene.input.keyboard.on("keydown", this.keydownListener);
     }
   }
 
-  displaySpeechBubble(message) {
-    if (this.avatar) {
-      if (this.speechBubble) {
-        this.speechBubble.destroy();
-      }
+  displaySpeechBubble(x, y, message) {
+    // Create a speech bubble at the given coordinates
+    const speechBubble = this.scene.add.image(x, y - 50, "Popup");
+    speechBubble.setOrigin(0.5);
+    speechBubble.setScale(1).setDepth(1);
 
-      this.speechBubble = this.scene.add.text(
-        this.avatar.x,
-        this.avatar.y - 50,
-        message,
-        {
-          fontSize: "18px",
-          fill: "#ffffff",
-          backgroundColor: "#000000",
-          padding: { x: 10, y: 5 },
-        }
-      ).setOrigin(0.5);
-    }
+    const bubbleWidth = speechBubble.width * speechBubble.scaleX - 20;
+
+    // Add the user's message inside the bubble
+    const bubbleText = this.scene.add
+      .text(x, y, message, {
+        fontSize: "18px",
+        fill: "#000000",
+        wordWrap: { width: bubbleWidth, useAdvancedWrap: true },
+      })
+      .setOrigin(0.5)
+      .setDepth(2)
+      .setAlpha(0);
+
+    Phaser.Display.Align.In.Center(bubbleText, speechBubble);
+
+    speechBubble.setAlpha(0);
+
+    // Add fade-in animation
+    this.scene.tweens.add({
+      targets: [speechBubble, bubbleText],
+      alpha: 1,
+      duration: 500,
+      ease: "Power2",
+    });
+
+    this.scene.time.delayedCall(3000, () => {
+      bubbleText.destroy();
+      speechBubble.destroy();
+    });
   }
 
   closePopup() {
@@ -117,125 +150,70 @@ class MessageHandler {
     this.messageInput.destroy();
   }
 
-  promptForEncryption() {
-    this.menuText.setText("Press arrows to adjust encryption.");
-    this.currentEncryptIndex = 0;
-    this.messageInput.setText(this.userMessage);
+  displayTokenizedMessage(tokenizedMessage) {
+    this.wordTextObjects.forEach((wordText) => wordText.destroy()); // Clear previous words
+    this.wordTextObjects = tokenizedMessage.map((word, index) => {
+      const wordText = this.scene.add
+        .text(
+          100 + index * 100, // Adjust x-coordinate for each word
+          200, // y-coordinate
+          word,
+          { font: "16px Arial", fill: "#fff" }
+        )
+        .setDepth(2);
+
+      wordText.setInteractive(); // Make words clickable
+      wordText.on("pointerdown", () => this.handleWordClick(index)); // Handle click
+
+      return wordText;
+    });
+  }
+
+  handleWordClick(index) {
+    if (this.selectedWords.length < 2) {
+      const selectedWord = this.tokenizedMessage[index];
+      this.selectedWords.push(selectedWord);
+      console.log("Selected word:", selectedWord);
+
+      if (this.selectedWords.length === 2) {
+        console.log("Ready to encrypt:", this.selectedWords);
+        this.isEncrypting = true;
+      }
+
+      this.highlightSelectedWord(index); // Optional: Highlight selected word
+    }
   }
 
   handleManualEncryption(event) {
-    const currentChar = this.userMessage[this.currentEncryptIndex];
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-      this.userMessage =
-        this.userMessage.substring(0, this.currentEncryptIndex) +
-        this.shiftCharacter(currentChar, event.key === "ArrowUp" ? -3 : 3) +
-        this.userMessage.substring(this.currentEncryptIndex + 1);
-    } else if (event.key === "ArrowRight") {
-      this.currentEncryptIndex = (this.currentEncryptIndex + 1) % this.userMessage.length;
-    } else if (event.key === "ArrowLeft") {
-      this.currentEncryptIndex =
-        (this.currentEncryptIndex - 1 + this.userMessage.length) % this.userMessage.length;
-    } else if (event.key === "Enter") {
-      // Finish encryption
-      this.lastMessage = this.userMessage;
-      this.isEncrypted = true; // Mark encryption as done
-      this.menuActive = false;
-      this.displaySpeechBubble(this.userMessage);
-      this.closePopup();
-      this.launchPacket(); // Launch the packet to receiver
-      this.evaluateEncryption(); // Trigger evaluation after encryption
-    }
-    this.messageInput.setText(this.userMessage);
-  }
-
-  shiftCharacter(char, shift) {
-    if (/[a-zA-Z]/.test(char)) {
-      const isUpperCase = char === char.toUpperCase();
-      const base = isUpperCase ? 65 : 97;
-      return String.fromCharCode(
-        ((char.charCodeAt(0) - base + shift + 26) % 26) + base
-      );
-    }
-    return char;
-  }
-
-  evaluateEncryption() {
-    // Ensure encryption is complete
-    if (!this.isEncrypted) return;
-
-    // Example of how the evaluation might be done (using Caesar cipher with a shift of 3)
-    const correctEncryptedMessage = this.caesarCipher(this.lastMessage, 3);
-    let score = 0;
-
-    // Compare user encrypted message to the correct encrypted version
-    for (let i = 0; i < this.lastMessage.length; i++) {
-      if (this.lastMessage[i] === correctEncryptedMessage[i]) {
-        score++;
-      }
-    }
-
-    this.provideAIFeedback(score); // Provide feedback based on the score
-  }
-
-  caesarCipher(message, shift) {
-    return message
-      .split("")
-      .map((char) => this.shiftCharacter(char, shift))
-      .join("");
-  }
-
-  provideAIFeedback(score) {
-    // Clear previous feedback
-    if (this.aiFeedbackText) {
-      this.aiFeedbackText.destroy();
-    }
-
-    // Provide feedback based on score
-    let feedbackMessage;
-    if (score === this.lastMessage.length) {
-      feedbackMessage = "Excellent encryption!";
-    } else if (score > this.lastMessage.length / 2) {
-      feedbackMessage = "Good attempt, but some characters need more shifting.";
-    } else {
-      feedbackMessage = "Encryption needs improvement. Try again!";
-    }
-
-    // Display feedback message
-    this.aiFeedbackText = this.scene.add.text(
-      this.scene.scale.width / 2,
-      this.scene.scale.height / 2 + 50,
-      feedbackMessage,
-      {
-        fontSize: "20px",
-        fill: "#ffffff",
-        align: "center",
-      }
-    ).setOrigin(0.5);
-  }
-
-  showReceiverSpeechBubble(message) {
-    if (this.receiverAvatar) {
-      if (this.receiverSpeechBubble) {
-        this.receiverSpeechBubble.destroy();
-      }
-
-      // Display receiver speech bubble
-      this.receiverSpeechBubble = this.scene.add.text(
-        this.receiverAvatar.x,
-        this.receiverAvatar.y - 50,
-        message,
-        {
-          fontSize: "18px",
-          fill: "#ffffff",
-          backgroundColor: "#000000",
-          padding: { x: 10, y: 5 },
+    if (this.selectedWords.length < 2) {
+      if (event.key === "ArrowRight") {
+        this.currentEncryptIndex =
+          (this.currentEncryptIndex + 1) % this.tokenizedMessage.length;
+      } else if (event.key === "ArrowLeft") {
+        this.currentEncryptIndex =
+          (this.currentEncryptIndex - 1 + this.tokenizedMessage.length) %
+          this.tokenizedMessage.length;
+      } else if (event.key === "Enter") {
+        this.selectedWords.push(
+          this.tokenizedMessage[this.currentEncryptIndex]
+        );
+        if (this.selectedWords.length === 2) {
+          this.isEncrypting = true;
         }
-      ).setOrigin(0.5);
+        this.highlightSelectedWord();
+      }
     }
   }
 
-  launchPacket() {
-    // Show message in receiver's speech bubble
-    this.showReceiverSpeechBubble(this.lastMessage);
+  highlightSelectedWord() {
+    const word = this.tokenizedMessage[this.currentEncryptIndex];
+    this.menuText.setText(`Currently selecting: ${word}`);
+  }
+
+  closeEncryptionMenu() {
+    this.isEncrypting = false;
+    this.selectedWords = [];
+    this.wordTextObjects.forEach((wordText) => wordText.destroy()); // Clear words
+    this.menuText.setText("Encryption complete!");
   }
 }
