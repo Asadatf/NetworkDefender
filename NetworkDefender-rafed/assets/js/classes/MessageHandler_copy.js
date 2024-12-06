@@ -36,7 +36,7 @@ class MessageHandler {
       );
 
       let promptText = this.lastMessage
-        ? "Use arrow keys to select words to encrypt:"
+        ? "Select Words for encryption"
         : "Write your message:";
       this.menuText = this.scene.add
         .text(
@@ -62,6 +62,7 @@ class MessageHandler {
         this.userMessage = ""; // New message entry
       } else {
         this.userMessage = this.lastMessage; // For encryption
+        this.displayTokenizedMessage(this.tokenizedMessage);
       }
 
       // Remove previous keydown listener if exists
@@ -94,8 +95,6 @@ class MessageHandler {
             }
             this.messageInput.setText(this.userMessage + "_");
           } else {
-            // Display tokenized message when re-opening menu
-            this.displayTokenizedMessage(this.tokenizedMessage); // Pass tokenized message as parameter
             // Handle encryption logic
             this.handleManualEncryption(event);
           }
