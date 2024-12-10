@@ -176,7 +176,7 @@ class MessageHandler {
 
   async performAdvancedEncryptionAnalysis(originalMessage, encryptedMessage) {
     try {
-      const response = await fetch(this.encryptionAnalysisEndpoint, {
+      const response = await fetch("http://localhost:5000/analyze_encryption", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,11 +184,10 @@ class MessageHandler {
         body: JSON.stringify({
           original_message: originalMessage,
           encrypted_message: encryptedMessage,
-          encryption_method: "caesar_cipher",
+          encryption_method: this.encryptionMethod || "caesar_cipher",
         }),
       });
 
-      // Enhanced error handling
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -400,9 +399,13 @@ class MessageHandler {
         // Display packet arrival effect and encrypted message
         this.displayPacketArrivalEffect();
         this.displayReceiverEncryptedMessage();
+        this.performAdvancedEncryptionAnalysis(
+          this.lastMessage,
+          this.encryptedMessage
+        );
 
         // Add this line to perform encryption analysis
-        this.fallbackLocalScoring(this.lastMessage, this.encryptedMessage);
+        // this.fallbackLocalScoring(this.lastMessage, this.encryptedMessage);
       },
     });
   }
@@ -419,18 +422,20 @@ class MessageHandler {
   }
 
   displayEncryptionFeedback(result) {
-    // Create a text object to show encryption feedback
+    // Create a more comprehensive feedback text
     const feedbackText = this.scene.add
       .text(
         this.rX,
-        this.rY - 100,
-        `Security Score: ${result.security_score}\n${result.feedback || ""}`,
+        this.rY - 150, // Adjusted position
+        `⁠Security Score: ${result.security_score}\n` +
+          `⁠Recommendations:\n${result.recommendations.join("\n")}⁠`,
         {
           fontSize: "16px",
           fill: "#ffffff",
           backgroundColor: "#000000",
           padding: 10,
           align: "center",
+          wordWrap: { width: 300 },
         }
       )
       .setOrigin(0.5);
@@ -439,8 +444,8 @@ class MessageHandler {
     this.scene.tweens.add({
       targets: feedbackText,
       alpha: 0,
-      duration: 3000,
-      delay: 2000,
+      duration: 5000,
+      delay: 3000,
       onComplete: () => {
         feedbackText.destroy();
       },
