@@ -10,7 +10,18 @@ class NetworkDevice extends Phaser.Physics.Arcade.Image {
     // scale the device
     this.setScale(0.1);
 
+    // Set type
+    this.type = key;
+
     // add device to existing scene
     this.scene.add.existing(this);
+  }
+
+  highlight(isHighlighted) {
+    if (isHighlighted) {
+      this.setTint(0xffff00); // Yellow tint for highlight
+    } else {
+      this.clearTint(); // Remove highlight
+    }
   }
 }

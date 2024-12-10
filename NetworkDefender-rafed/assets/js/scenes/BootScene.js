@@ -49,6 +49,7 @@ class BootScene extends Phaser.Scene {
   }
 
   create() {
+    console.log("RexUI available:", !!this.rexUI);
     console.log("Starting Game");
 
     this.scene.start("Title");

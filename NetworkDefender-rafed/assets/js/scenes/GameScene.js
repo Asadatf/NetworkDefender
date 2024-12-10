@@ -47,6 +47,10 @@ class GameScene extends Phaser.Scene {
 
     this.physics.add.collider(this.defender, this.obstacles);
 
+    // Initialize NetworkPathManager with obstacles group
+    this.pathManager = new NetworkPathManager(this, this.obstacles);
+    this.pathManager.initializeNetworkTopology();
+
     // Creating Packet
     this.packet = new Packet(
       this,
@@ -63,6 +67,8 @@ class GameScene extends Phaser.Scene {
     );
     this.briefcase_red.setScale(2).setDepth(1).setVisible(false);
 
+    this.Encryptiontutorial = new EncryptionTutorial(this);
+
     // Message handler
     this.MessageHandler = new MessageHandler(
       this,
@@ -71,7 +77,8 @@ class GameScene extends Phaser.Scene {
       dX,
       dY,
       rX,
-      rY
+      rY,
+      this.Encryptiontutorial
     );
 
     // Creating Controll Keys
@@ -104,7 +111,11 @@ class GameScene extends Phaser.Scene {
       }
     });
 
-    if (this.nearObstacle && !this.MessageHandler.menuActive) {
+    if (
+      this.nearObstacle &&
+      !this.MessageHandler.menuActive &&
+      this.pathManager.isPathValid()
+    ) {
       this.interactText.setText("Press E to Interact").setVisible(true);
     } else {
       this.interactText.setVisible(false);
