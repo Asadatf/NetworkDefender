@@ -51,6 +51,9 @@ class GameScene extends Phaser.Scene {
     this.pathManager = new NetworkPathManager(this, this.obstacles);
     this.pathManager.initializeNetworkTopology();
 
+    // Decryption Mini Puzzle
+    this.decryptionPuzzle = new DecryptionPuzzle(this);
+
     // Creating Packet
     this.packet = new Packet(
       this,
@@ -78,7 +81,8 @@ class GameScene extends Phaser.Scene {
       dY,
       rX,
       rY,
-      this.Encryptiontutorial
+      this.Encryptiontutorial,
+      this.decryptionPuzzle
     );
 
     // Creating Controll Keys
