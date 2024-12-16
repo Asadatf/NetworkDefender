@@ -13,8 +13,8 @@ class NetworkPathManager {
     // Add interactive capabilities to pre-existing nodes
     this.nodes.forEach((node) => {
       node.setInteractive();
-      // node.on("pointerdown", () => this.openIPPopup(node));
-      node.on("pointerdown", () => this.checkIP(node));
+      node.on("pointerdown", () => this.openIPPopup(node));
+      // node.on("pointerdown", () => this.checkIP(node));
     });
   }
 
@@ -128,30 +128,30 @@ class NetworkPathManager {
 
   checkIP(node) {
     // Check if the entered IP is correct
-    // if (this.userIP === this.correctIP) {
-    //   console.log("Correct IP entered!");
+    if (this.userIP === this.correctIP) {
+      console.log("Correct IP entered!");
 
-    //   // Highlight the node and add it to the path
-    //   node.highlight(true);
-    //   this.currentPath.push(node);
+      // Highlight the node and add it to the path
+      node.highlight(true);
+      this.currentPath.push(node);
 
-    //   // Close the popup
-    //   this.closePopup();
+      // Close the popup
+      this.closePopup();
 
-    //   // Check if path is complete
-    //   if (this.currentPath.length === this.maxNodes) {
-    //     this.validatePath();
-    //   }
-    // } else {
-    //   console.log("Incorrect IP! Try again.");
-    //   this.ipInputField.setText("Incorrect IP! Try again.");
-    //   this.userIP = ""; // Reset the IP input
-    // }
-    node.highlight(true);
-    this.currentPath.push(node);
-    if (this.currentPath.length === this.maxNodes) {
-      this.validatePath();
+      // Check if path is complete
+      if (this.currentPath.length === this.maxNodes) {
+        this.validatePath();
+      }
+    } else {
+      console.log("Incorrect IP! Try again.");
+      this.ipInputField.setText("Incorrect IP! Try again.");
+      this.userIP = ""; // Reset the IP input
     }
+    // node.highlight(true);
+    // this.currentPath.push(node);
+    // if (this.currentPath.length === this.maxNodes) {
+    //   this.validatePath();
+    // }
   }
 
   closePopup() {

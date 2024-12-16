@@ -636,13 +636,13 @@ class MessageHandler {
         // Display packet arrival effect and encrypted message
         this.displayPacketArrivalEffect();
         this.displayReceiverEncryptedMessage();
-        // this.performAdvancedEncryptionAnalysis(
-        //   this.lastMessage,
-        //   this.encryptedMessage
-        // );
+        this.performAdvancedEncryptionAnalysis(
+          this.lastMessage,
+          this.encryptedMessage
+        );
 
         // Add this line to perform encryption analysis
-        this.fallbackLocalScoring(this.lastMessage, this.encryptedMessage);
+        // this.fallbackLocalScoring(this.lastMessage, this.encryptedMessage);
       },
     });
   }
