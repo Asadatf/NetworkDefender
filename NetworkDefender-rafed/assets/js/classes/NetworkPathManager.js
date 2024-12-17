@@ -7,14 +7,31 @@ class NetworkPathManager {
     this.isValid = false;
     this.menuActive = false;
     this.correctIP = "192.168.1.1"; // Example correct IP (can be dynamically set)
+    this.timeManager = this.scene.timeManager;
   }
 
+  // initializeNetworkTopology() {
+  //   // Add interactive capabilities to pre-existing nodes
+  //   this.nodes.forEach((node) => {
+  //     node.setInteractive();
+  //     node.on("pointerdown", () => this.openIPPopup(node));
+  //     // node.on("pointerdown", () => this.checkIP(node));
+  //   });
+  // }
+
   initializeNetworkTopology() {
-    // Add interactive capabilities to pre-existing nodes
+    let firstInteraction = true;
+
     this.nodes.forEach((node) => {
       node.setInteractive();
-      node.on("pointerdown", () => this.openIPPopup(node));
-      // node.on("pointerdown", () => this.checkIP(node));
+      node.on("pointerdown", () => {
+        // Start timer on first interaction only
+        if (firstInteraction && this.timeManager) {
+          this.timeManager.startTimer();
+          firstInteraction = false;
+        }
+        this.openIPPopup(node);
+      });
     });
   }
 
@@ -126,32 +143,56 @@ class NetworkPathManager {
     }
   }
 
+  // checkIP(node) {
+  //   // Check if the entered IP is correct
+  //   if (this.userIP === this.correctIP) {
+  //     console.log("Correct IP entered!");
+
+  //     // Highlight the node and add it to the path
+  //     node.highlight(true);
+  //     this.currentPath.push(node);
+
+  //     // Close the popup
+  //     this.closePopup();
+
+  //     // Check if path is complete
+  //     if (this.currentPath.length === this.maxNodes) {
+  //       this.validatePath();
+  //     }
+  //   } else {
+  //     console.log("Incorrect IP! Try again.");
+  //     this.ipInputField.setText("Incorrect IP! Try again.");
+  //     this.userIP = ""; // Reset the IP input
+  //   }
+  //   // node.highlight(true);
+  //   // this.currentPath.push(node);
+  //   // if (this.currentPath.length === this.maxNodes) {
+  //   //   this.validatePath();
+  //   // }
+  // }
+
   checkIP(node) {
-    // Check if the entered IP is correct
     if (this.userIP === this.correctIP) {
       console.log("Correct IP entered!");
 
-      // Highlight the node and add it to the path
       node.highlight(true);
       this.currentPath.push(node);
 
-      // Close the popup
       this.closePopup();
 
-      // Check if path is complete
       if (this.currentPath.length === this.maxNodes) {
         this.validatePath();
       }
     } else {
       console.log("Incorrect IP! Try again.");
       this.ipInputField.setText("Incorrect IP! Try again.");
-      this.userIP = ""; // Reset the IP input
+      this.userIP = "";
+
+      // Add time penalty for incorrect IP
+      if (this.timeManager) {
+        this.timeManager.addPenalty(5); // 5-second penalty
+      }
     }
-    // node.highlight(true);
-    // this.currentPath.push(node);
-    // if (this.currentPath.length === this.maxNodes) {
-    //   this.validatePath();
-    // }
   }
 
   closePopup() {

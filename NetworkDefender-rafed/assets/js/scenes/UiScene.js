@@ -15,10 +15,10 @@ class UiScene extends Phaser.Scene {
 
   setupUiElements() {
     //Create the store text game object
-    this.scoretext = this.add.text(35, 8, "Score: 0", {
-      fontSize: "32px",
-      fill: "#fff",
-    });
+    // this.scoretext = this.add.text(35, 8, "Score: 0", {
+    //   fontSize: "32px",
+    //   fill: "#fff",
+    // });
   }
 
   //   setUpEvents() {

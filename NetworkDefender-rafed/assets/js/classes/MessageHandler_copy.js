@@ -317,26 +317,45 @@ class MessageHandler {
       )
       .setOrigin(0.5);
 
+    // Show current wallet balance
+    const balanceText = this.scene.add
+      .text(
+        this.scene.scale.width / 2,
+        this.scene.scale.height / 2 - 100,
+        `Available: ${this.scene.walletManager.coins} CC`,
+        {
+          fontSize: "18px",
+          fill: "#ffd700",
+          align: "center",
+        }
+      )
+      .setOrigin(0.5);
+
     // Automatic Encryption Button
     const autoEncryptButton = this.scene.add
       .text(
         this.scene.scale.width / 2,
         this.scene.scale.height / 2 - 50,
-        "Automatic Encryption",
+        "Automatic Encryption\nCost: 20 CC | Time: 5s",
         {
           fontSize: "20px",
           fill: "#00ff00",
           backgroundColor: "#004400",
           padding: 10,
+          align: "center",
         }
       )
       .setOrigin(0.5)
       .setInteractive()
       .on("pointerdown", () => {
-        this.closePopup();
-        this.isEncrypting = true;
-        this.encryptionMethod = "automatic";
-        this.performAutomaticEncryption();
+        if (this.scene.walletManager.spend(20)) {
+          this.closePopup();
+          this.isEncrypting = true;
+          this.encryptionMethod = "automatic";
+          this.performAutomaticEncryption();
+        } else {
+          this.showInsufficientFundsError();
+        }
       });
 
     // Manual Encryption Button
@@ -344,25 +363,48 @@ class MessageHandler {
       .text(
         this.scene.scale.width / 2,
         this.scene.scale.height / 2 + 50,
-        "Manual Encryption",
+        "Manual Encryption\nCost: 5 CC | Time: 15s",
         {
           fontSize: "20px",
           fill: "#0000ff",
           backgroundColor: "#000044",
           padding: 10,
+          align: "center",
         }
       )
       .setOrigin(0.5)
       .setInteractive()
       .on("pointerdown", () => {
-        this.closePopup();
-        this.isEncrypting = true;
-        this.encryptionMethod = "manual";
-
-        // Start with the first selected word
-        const firstWord = this.selectedWords[0];
-        this.visualizeCaesarCipherShift(firstWord);
+        if (this.scene.walletManager.spend(5)) {
+          this.closePopup();
+          this.isEncrypting = true;
+          this.encryptionMethod = "manual";
+          const firstWord = this.selectedWords[0];
+          this.visualizeCaesarCipherShift(firstWord);
+        } else {
+          this.showInsufficientFundsError();
+        }
       });
+
+    // Add hover effects
+    [autoEncryptButton, manualEncryptButton].forEach((button) => {
+      button.on("pointerover", () => {
+        button.setScale(1.1);
+        this.scene.tweens.add({
+          targets: button,
+          alpha: 0.8,
+          duration: 100,
+        });
+      });
+      button.on("pointerout", () => {
+        button.setScale(1);
+        this.scene.tweens.add({
+          targets: button,
+          alpha: 1,
+          duration: 100,
+        });
+      });
+    });
 
     // Store elements for cleanup
     this.menuElements = [
@@ -372,7 +414,36 @@ class MessageHandler {
       manualEncryptButton,
     ];
 
-    this.startEncryptionTimer();
+    // this.startEncryptionTimer();
+  }
+
+  showInsufficientFundsError() {
+    const errorText = this.scene.add
+      .text(
+        this.scene.scale.width / 2,
+        this.scene.scale.height / 2 - 200,
+        "Not enough CyberCoins!",
+        {
+          fontSize: "24px",
+          fill: "#ff0000",
+          backgroundColor: "#000000",
+          padding: 5,
+          stroke: "#ffffff",
+          strokeThickness: 2,
+        }
+      )
+      .setOrigin(0.5);
+
+    this.scene.tweens.add({
+      targets: errorText,
+      alpha: { from: 1, to: 0 },
+      y: "-=30",
+      duration: 1500,
+      ease: "Power2",
+      onComplete: () => {
+        errorText.destroy();
+      },
+    });
   }
 
   performAutomaticEncryption() {
@@ -605,12 +676,46 @@ class MessageHandler {
   }
 
   launchEncryptedPacket() {
-    // Stopping Timer wg=hen packet is launched
-    if (this.encryptionTimer) {
-      this.encryptionTimer.remove();
-    }
-    if (this.timeRemainingText) {
-      this.timeRemainingText.destroy();
+    // Stopping Timer when packet is launched
+    if (this.scene.timeManager && this.scene.timeManager.isActive) {
+      // Get remaining time for potential bonus
+      const remainingSeconds = Math.ceil(
+        this.scene.timeManager.timeRemaining / 1000
+      );
+
+      // Stop the timer
+      this.scene.timeManager.isActive = false;
+      if (this.scene.timeManager.timerEvent) {
+        this.scene.timeManager.timerEvent.remove();
+      }
+
+      // Award bonus coins if completed quickly
+      if (remainingSeconds >= 15) {
+        this.scene.walletManager.addBonus(10);
+        // Show bonus message
+        const bonusText = this.scene.add
+          .text(
+            this.scene.scale.width / 2,
+            this.scene.scale.height / 2 - 100,
+            "Time Bonus: +10 CC!",
+            {
+              fontSize: "24px",
+              fill: "#00ff00",
+              stroke: "#000000",
+              strokeThickness: 4,
+            }
+          )
+          .setOrigin(0.5);
+
+        this.scene.tweens.add({
+          targets: bonusText,
+          alpha: 0,
+          y: "-=50",
+          duration: 2000,
+          ease: "Power2",
+          onComplete: () => bonusText.destroy(),
+        });
+      }
     }
 
     // Reset packet to initial position
